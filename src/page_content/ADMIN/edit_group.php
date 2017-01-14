@@ -16,7 +16,8 @@ $groups = $groupDbAdapter->SelectWhereJSON($where_object);
 	}
 ?>
 <section>
-  <h1>Edit This Group (STILL IN DEVELOPMENT)</h1>
+  <h1>Edit Group (IN DEVELOPMENT)</h1>
+  <p>Doesn't update user related group name data.</p>
   <a class="btn btn-primary"  href="./?I=<?php echo pg_encrypt("ADMIN-list_groups",$pg_encrypt_key,"encode") ?>" />Go Back to List</a>
   <hr>
   <div class="info">
@@ -34,10 +35,10 @@ $groups = $groupDbAdapter->SelectWhereJSON($where_object);
               <input type="hidden" id="post_type" name="post_type" value="<?php echo pg_encrypt("qryGROUP-edit_group_qry",$pg_encrypt_key,"encode") ?>" />
               <input type="hidden" name="group_id" value="<?php echo pg_encrypt($GRP_id,$pg_encrypt_key,"encode"); ?>">
 
-              <label>User Username</label>
+              <label>Group Name</label>
               <input name="group_name" type="text" value="<?php echo $GRP_name; ?>" class="form-control">
               
-              <button type="submit" class="btn btn-danger">EDIT GROUP (NOT WORKING)</button>
+              <button type="submit" class="btn btn-danger">EDIT GROUP</button>
             </form>
             <hr>
           </div>
