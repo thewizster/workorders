@@ -63,59 +63,7 @@
                 $formDescription = $formToRender['Description'];
                 $formXml = base64_decode($formToRender['FormXml']);
             } else {
-                try {
-                    // POST['id'] is not present. Should handle posted form data here
-                    $formPostHandler = new Pacman($_POST);
-                    // Need to load the form. Form data is stored with new workorder.
-                    $formsDataAdapter = new FormsDataController($dsn, $user_name, $pass_word);
-                    $form = $formsDataAdapter->getFormById($formPostHandler->formId);
-                    // Setup data needed for creating workorder and rendering page
-                    $hideFormRenderingClassString = "hidden";
-                    $formName = $formPostHandler->formName; //$_POST['form-name'];
-                    $formDescription = $formPostHandler->formDescription; //$_POST['form-description'];
-                    // Form Workflow field holds array of approver email addresses. We need to transform this to work with the data.
-                    $approverArray = ApproverHelper::ParseRawWorkflowData($form['Workflow']);
-                    $approvers = ApproverHelper::NewApproverArrayFromEmailArray($approverArray);
-                    // Get the groupWorkflow for the users group
-                    $groupWorkflows = $form['GroupWorkflows'];
-                    $groupWorkflows = json_decode($groupWorkflows, true);
-                    $userGroupApproverArray = $groupWorkflows[$currentUserGroup];
-                    $groupApprovers = ApproverHelper::NewApproverArrayFromEmailArray($userGroupApproverArray);
-                    // merge the approver arrays with group first and create the workflow for the form
-                    $mergedApprovers = ApproverHelper::MergeApproverArrays($groupApprovers, $approvers);
-                    $workflow =  new Workflow($formName . ' Workflow', $mergedApprovers);
-                    
-                    $wo = new Workorder();
-                    $wo->formName = $formPostHandler->formName;
-                    $wo->formId = $formPostHandler->formId;
-                    $wo->description = $formPostHandler->formDescription;
-                    $wo->formXml = $formPostHandler->asFormXML();
-                    $wo->formData = $formPostHandler->asJSON();
-                    $wo->currentApprover = ApproverHelper::setNextOrFirstCurrent($mergedApprovers, $currentUserEmail)->email;
-                    $wo->workflow = $workflow->asJSON();
-                    $wo->approveState = ApproveState::PendingApproval;
-                    $wo->approverKey = generateApproverKey();
-                    $wo->viewOnlyKey = generateApproverKey(); // TODO: rename key gen function. It generates basic key. Not exclusive to approvers.
-                    $wo->createdBy = $currentUserEmail;
-                    $wo->updatedBy = $currentUserEmail;
-                    $wo->notifyOnFinalApproval = $form['notifyOnFinalApproval'];
-
-                    $woDataAdapter = new WorkorderDataAdapter($dsn, $user_name, $pass_word, $currentUserEmail);
-                    $woDataAdapter->Insert($wo);
-                    $wo->id = $woDataAdapter->lastInsertId;
-
-                    // create a vew model for the email adapter to use. Helps to generate more detailed emails.
-                    $woViewModel = new WorkorderViewModel($wo, $wo->approverKey);
-                    // send emails.
-                    $emailAdapter = new WorkorderEmailAdapter($fromEmailAddress);
-                    $emailAdapter->SendViewOnlyCreatedToCreator($wo, $woViewModel);
-                    $emailAdapter->SendNeedsApprovalToCurrentApprover($wo, $woViewModel);
-
-                    $formSubmissionMessage = "<div class='container'><div class='alert alert-success'><i class='fa fa-info-circle'></i><b> " . $formName . "</b> was saved. Check your email.</div></div>";
-                    
-                } catch (Exception $e) {
-                    $formSubmissionMessage = "<div class='container'><div class='alert alert-danger'><i class='fa fa-exclamation-triangle'></i> There was a problem saving " . $formName . ".<p>" . $e->getMessage . "</p></div></div>";
-                }
+                $formSubmissionMessage = "<div class='container'><div class='alert alert-danger'><i class='fa fa-exclamation-triangle'></i> Bad request. </div></div>";                
             }
             
         } else {
@@ -147,7 +95,7 @@
                     <div class="col-lg-6">
                         <textarea id="form-builder-template" hidden><?php echo $formXml; ?></textarea>
                         <div id="rendered-form">
-                            <form id="workorderform" class="form-horizontal" method="post"></form>
+                            <form id="workorderform" class="form-horizontal" method="post" action="./?I=<?php echo  pg_encrypt("WORKORDER-create",$pg_encrypt_key,"encode"); ?>"></form>
                             <button id="formSubmitButton" class="btn btn-success pull-right">Send</button>
                         </div>
                     </div>
@@ -195,7 +143,11 @@
                     .attr('name', "form-description")
                     .attr('value', <?php echo "'" . $formDescription . "'"; ?>)
                     .appendTo(form);
-                
+                 $('<input />').attr('type', 'hidden')
+                    .attr('name', "post_type")
+                    .attr('value', <?php echo "'" . pg_encrypt("qryWORKORDER-add_workorder_qry",$pg_encrypt_key,"encode") . "'"; ?>)
+                    .appendTo(form);
+
                 form.submit();
             },
             ignore: [],
