@@ -72,7 +72,7 @@ if (isset($login)) {
 				$post_page = pg_encrypt($post_page,$pg_encrypt_key,"decode");
 				$post_page = str_replace('-','/',$post_page);
 				include_once "dbquery/".$post_page.".php";
-				
+
 			}
 			
 	/*
