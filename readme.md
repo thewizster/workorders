@@ -15,4 +15,8 @@ A simple way for large groups to organize work using custom forms!
 * User registration can be limited based on domain.
 * Users can view work orders that need their approval.
 * Users can view work orders they have submitted.
-* Collaboration feature allows including others in the workflow process as needed. 
+* Collaboration feature allows including others in the workflow process as needed.
+
+## Under Development
+
+* Support custom HTML forms. Saves new workorders from standard HTML form post.
